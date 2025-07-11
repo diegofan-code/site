@@ -1,4 +1,4 @@
-# rodrigobaron.com
+# nocodenobrain.com
 
 - [x] **Nextra 4**
 - [x] **Search with Pagefind**
@@ -19,7 +19,7 @@ You can deploy this template on Vercel by clicking the button below
 
 Using the GitHub CLI:
 ```bash
-gh repo clone rodrigobaron/site
+gh repo clone nocodenobrain/site
 ```
 
 ### Install
