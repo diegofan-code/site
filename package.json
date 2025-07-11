@@ -15,9 +15,9 @@
   "author": "Diego Fan Ribeiro",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rodrigobaron/site/issues"
+    "url": "https://github.com/diegofan-code/site/issues"
   },
-  "homepage": "https://github.com/rodrigobaron/site#readme",
+  "homepage": "https://github.com/diegofan-code/site#readme",
   "dependencies": {
     "@giscus/react": "^3.1.0",
     "clsx": "^2.1.0",
