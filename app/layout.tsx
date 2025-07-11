@@ -25,7 +25,7 @@ const navbar = (
 )
 const footer = (
     <Footer>
-        <time>{new Date().getFullYear()}</time> © Rodrigo Baron.
+        <time>{new Date().getFullYear()}</time> © Diego Fan.
         <p>
             &nbsp;Built with{' '}
             <a href='https://nextra.site/' target='_blank' rel='noopener noreferrer' className='underline'>
