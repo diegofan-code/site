@@ -1,0 +1,155 @@
+---
+title: "Part2 - Key Concepts to MLOps Professional Must Know - Data Storage"
+date: 2025/06/02
+description: This Article will tell about Data Storage concept and helps to answer Interviews basic questions.
+thumbnail: /images/posts/mlops-workflow-data-storage/datastorage.png
+tags: [MLOps]
+author: Diego Fan Ribeiro
+---
+
+import Image from 'next/image'
+
+# MLOps Workflow Structure: Data storage
+
+Data storage in ML involves organizing and persisting raw data, processed datasets, and intermediate outputs. It ensures data is **accessible** , **secure** , and **cost-effective** .
+
+#### **Key Concepts** :
+
+- **Data Lakes vs. Data Warehouses** :
+    - **Data Lake** : Stores raw, unstructured data (e.g., images, JSON logs) for exploration.
+    - **Data Warehouse** : Stores structured, query-optimized data (e.g., sales transactions).
+- **Data Tiering** : Hot (frequently accessed) vs. cold (archived) storage.
+- **Data Partitioning** : Splitting data by time, category, or geography for efficient querying.
+
+#### **Example** :
+
+A retail company stores **raw sales logs** (unstructured JSON) in a data lake. Processed data (cleaned CSVs) is stored in a warehouse for BI tools. Time-series sales data is partitioned by `region/year/month` to speed up queries.
+
+#### **Challenges** :
+
+- Balancing cost (storing petabytes) vs. performance.
+- Ensuring data privacy (e.g., GDPR compliance).
+
+
+## Explanation
+- **What it is** : Storing raw data, processed datasets, and intermediate outputs.
+- **Key Tools** :
+    - **Cloud Storage** : AWS S3, Google Cloud Storage (GCS), Azure Blob.
+    - **Data Lakes** : Store unstructured/semi-structured data (e.g., Delta Lake, Apache Iceberg).
+    - **Data Warehouses** : Structured data for querying (e.g., BigQuery, Redshift, Snowflake).
+- **Best Practices** :
+    - Use **columnar formats** (Parquet, ORC) for efficient ML workflows.
+    - Separate **raw** , **processed** , and **validation** data zones.
+    - Optimize costs with **tiered storage** (hot vs. cold storage).
+- **Interview Prep** :
+    - Compare data lakes vs. warehouses.
+    - Explain how you’d store time-series data for a recommendation system.
+
+
+#### Explain how you’d store time-series data for a recommendation system for exemple?
+### **Step 1: Understand the Data Characteristics**
+
+Time-series data in recommendation systems typically includes **user interactions** (e.g., clicks, views, purchases) with timestamps. For example:
+
+- **Event type** : "user_123 clicked item_456 at 2023-10-05 14:30:00."
+- **Granularity** : Events can be sparse (e.g., hourly) or dense (e.g., per-second clicks).
+
+---
+
+### **Step 2: Choose a Storage Format**
+
+- **Columnar Storage** : Use formats like **Parquet** or **ORC** for efficient compression and fast querying (critical for time-based aggregations).
+- **Example** : Store user interactions in Parquet files partitioned by `date=YYYY-MM-DD`.
+
+---
+
+### **Step 3: Optimize for Time-Based Queries**
+
+- **Partitioning** : Split data by time (e.g., `year=2023/month=10/day=05`).  
+    This speeds up queries like _"show all user activity from last week."_
+- **Clustering** : Sort data within partitions by `user_id` or `timestamp` for faster scans.
+
+---
+
+### **Step 4: Separate Raw and Processed Data**
+
+- **Raw Data** : Store unprocessed events in a **data lake** (e.g., AWS S3) for archival and exploration.  
+    Example path: `s3://raw-data/recommendations/year=2023/month=10/day=05/`.
+- **Processed Data** : Cleaned/transformed data (e.g., deduplicated, aggregated) goes into a **data warehouse** (e.g., BigQuery, Redshift) for analytics.
+
+---
+
+### **Step 5: Handle Real-Time vs. Batch Data**
+
+- **Real-Time Events** : Use a **streaming platform** (e.g., Apache Kafka) to ingest live interactions, then write to a time-series database (e.g., InfluxDB) or append to a delta lake (e.g., Delta Lake on S3).
+- **Batch Processing** : Periodically aggregate raw data (e.g., daily user activity summaries) and store in a warehouse.
+
+---
+
+### **Step 6: Version Time-Series Data**
+
+- **Why?** : To reproduce experiments or debug model performance over time.  
+    Example: Version datasets by week (`v1_week_2023-10-01`, `v2_week_2023-10-08`).
+- **Tool** : Use **DVC** or **MLflow** to track changes in data schemas or sampling strategies.
+
+---
+
+### **Step 7: Use a Feature Store for Time-Based Features**
+
+- **Example Features** :
+    - `user_7d_click_count`: Number of clicks by a user in the last 7 days.
+    - `item_30d_view_rank`: Popularity rank of an item over 30 days.
+- **Storage** : Store these features in a **feature store** (e.g., Feast) with **time-based freshness** (update daily/hourly).
+
+---
+
+### **Step 8: Metadata Management**
+
+- Track:
+    - **Schema** : Columns like `user_id`, `item_id`, `timestamp`, `event_type`.
+    - **Lineage** : Link processed data back to raw sources.
+    - **Statistics** : Monitor data drift (e.g., sudden drop in click rates).
+
+---
+
+### **Example Scenario**
+
+**Problem** : A video streaming service needs to recommend movies based on user watch history.  
+**Solution** :
+
+1. **Raw Storage** : Store every "play," "pause," or "skip" event in S3 as Parquet files partitioned by `date=YYYY-MM-DD`.
+2. **Processing** : Use Apache Spark to aggregate daily watch time per user and store summaries in Redshift.
+3. **Feature Store** : Compute `user_weekly_watch_time` and `movie_popularity_last_month` for the recommendation model.
+4. **Versioning** : Tag datasets by week to reproduce model training from specific time windows.
+
+---
+
+### **Challenges & Mitigations**
+
+- **Volume** : Use columnar compression (e.g., Parquet) to reduce storage costs.
+- **Latency** : For real-time recommendations, precompute features in a low-latency database (e.g., Redis).
+- **Data Drift** : Monitor weekly time-series statistics (e.g., average clicks per user) to detect shifts.
+
+---
+
+### **Interview Answer**
+
+_"For a recommendation system, I’d store time-series data by partitioning it into daily/weekly buckets using columnar formats like Parquet for efficient querying. Raw events go into a data lake, while aggregated features (e.g., 7-day user activity) are stored in a feature store. Versioning ensures reproducibility, and metadata tracks data lineage. For real-time recommendations, I’d use a streaming pipeline to update features incrementally."_
+
+This approach balances scalability, cost, and performance while enabling both batch and real-time recommendations. 🚀
+
+### References
+
+- [Data Intensive Book](https://dataintensive.net/)
+- [Hidden Technical Debt in Machine Learning Systems](https://proceedings.neurips.cc/paper_files/paper/2015/file/86df7dcfd896fcaf2674f757a2463eba-Paper.pdf)
+- [Continuous Training of Machine Learning Models](https://blog.stackademic.com/continuous-training-of-ml-models-7d8acaf44dda)
+- [Tfx: A tensorflow-based production-scale machine learning pipeline framework](https://dl.acm.org/doi/10.1145/3097983.3098021)
+- [MLflow Documentation](https://mlflow.org/docs/latest/index.html)
+- [Share Features](https://docs.tecton.ai/docs/share-features#feature-sharing-patterns)
+- [Uber Engineering Blog](https://www.uber.com/en-BR/blog/salvador/engineering/)
+- [Netflix Tech Blog](https://netflixtechblog.com/)
+- [Towards Data Science (Medium)](https://towardsdatascience.com/)
+- [arxiv](https://arxiv.org/)
+- [Machine Learning Operations: A Survey on MLOps Tool Support](https://arxiv.org/abs/2202.10169)
+- [Building Machine Learning Powered Applications](https://www.oreilly.com/library/view/building-machine-learning/9781492045106/)
+- [Feast Documentation](https://docs.feast.dev/)
