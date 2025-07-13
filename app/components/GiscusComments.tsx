@@ -10,7 +10,7 @@ const GiscusComments = () => {
         <div className='giscus'>
         <Giscus
             id="comments"
-            repo="diegofan-code/nocodenobrain"
+            repo="diegofan-code/site"
             repoId="R_kgDOGgO1pA"
             category="Announcements"
             categoryId="DIC_kwDONxvZHM4Cmh3a"
