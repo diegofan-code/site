@@ -1,0 +1,128 @@
+---
+title: "How to Deploy Fast API on AWS EC2"
+date: 2025/07/14
+description: This Article will teach how to deploy Fast API on EC2 AWS.
+thumbnail: /images/posts/fastapi-aws/fastapiaws.png
+tags: [MLOps]
+author: Diego Fan Ribeiro 
+---
+
+import Image from 'next/image'
+
+# How to Deploy Fast API on AWS EC2
+
+ Deploying your **FastAPI** application on **AWS EC2** is a powerful way to get your API online and accessible to the world. This guide walks you through the process in a simple and easy-to-follow way.
+## Prerequisites
+
+Before we begin, make sure you have:
+
+- A FastAPI project ready
+- An AWS account
+- Basic knowledge of the terminal (Linux/Mac or WSL for Windows)
+- Your FastAPI app code ready to upload
+
+## Step 1: Launch an EC2 Instance
+
+1. Log in to your AWS Console.
+2. Navigate to **EC2** > **Instances** > **Launch Instance** .
+![Step 1: Launch an EC2 Instance](/images/posts/fastapi-aws/awsec2-1.png)
+3. Choose an **Amazon Linux 2 AMI** (or Ubuntu if you prefer).
+4. Select a free-tier eligible instance (like t2.micro).
+
+![Step 1: Launch an EC2 Instance](/images/posts/fastapi-aws/awses2-2.gif)
+
+5. Configure security group:
+    - Allow **HTTP (port 80)** and **Custom TCP (port 8000)** .
+    - Also allow **SSH (port 22)** for access.
+
+6. Download and save your **key pair (.pem file)** .
+7. Launch the instance.
+![Step 1: Launch an EC2 Instance](/images/posts/fastapi-aws/awses2-3.gif)
+
+## Step 2: Connect to Your EC2 Instance
+
+Use your terminal to connect via SSH:
+![Step 2: Connect to Your EC2 Instance](/images/posts/fastapi-aws/awses2-5.gif)
+```bash
+chmod 400 your-key.pem
+ssh -i "your-key.pem" ec2-user@your-instance-public-ip
+```
+
+
+## 🐍 Step 3: Install Python & Dependencies
+
+Update and install Python:
+
+```shell
+sudo apt-get update && sudo apt install python3-pip nginx
+
+```
+
+![Step 3: Install Python & Dependencies](/images/posts/fastapi-aws/awses2-6.gif)
+
+Configure nginx
+```bash
+sudo vim /etc/nginx/sites-enabled/fastapi_nginx
+
+vim
+server {
+		listen 80;
+		server_name {your_Public IPv4 address};
+		location / {
+					proxy_pass://127.0.0.1:8000;
+		} 
+
+}
+
+
+```
+
+
+![Step 3: Install Python & Dependencies](/images/posts/fastapi-aws/awses2-7.gif)
+
+```bash
+sudo service nginx restart
+```
+
+## 📁 Step 4: Upload Your FastAPI Code
+
+Clone the [repository](https://github.com/diegofan-code/fastapi-tutorial.git)
+
+```bash
+git clone https://github.com/diegofan-code/fastapi-tutorial.git
+```
+
+Enter the folder and install the dependencies from requirements.txt.
+
+**Note:** Sometimes the machine may prevent you from installing packages using `pip3`. In that case, use the following command instead:
+
+```bash
+pip3 install --break-system-packages -r requirements.txt
+
+```
+
+
+Then run:
+```bash
+python3 -m uvicorn main:app
+
+```
+
+Now, FastAPI is running on your virtual cloud machine in AWS.  
+To access the API, open your browser and go to `http://your-public-ip`.  
+Since we haven’t configured SSL/TLS, make sure to use **HTTP** and not HTTPS.
+
+![Step 4: Upload Your FastAPI Code](/images/posts/fastapi-aws/awses2-8.gif)
+
+**Finally, after testing, you can terminate your instance on AWS to avoid unnecessary charges.**
+
+![Step 4: Upload Your FastAPI Code](/images/posts/fastapi-aws/awses2-10.gif)
+
+## ✅ Conclusion
+
+You've successfully deployed a **FastAPI application on AWS EC2** , set up **Nginx as a reverse proxy** , and exposed your API to the web — all using free tools and services.
+# References
+
+[AWS ](https://aws.amazon.com/pt/free/?sc_icampaign=acq_aws_takeover-1st-visit-free-tier&sc_ichannel=ha&sc_icontent=awssm-evergreen-1st-visit&sc_iplace=hero&trk=ha_awssm-evergreen-1st-visit&all-free-tier.sort-by=item.additionalFields.SortRank&all-free-tier.sort-order=asc&awsf.Free%20Tier%20Types=*all&awsf.Free%20Tier%20Categories=*all)
+[FastAPI Documentation](https://fastapi.tiangolo.com/)
+[Nginx Documentation](https://docs.nginx.com/)
