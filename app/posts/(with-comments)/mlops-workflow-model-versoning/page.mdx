@@ -1,0 +1,298 @@
+---
+title: "Part5 - Key Concepts to MLOps Professional Must Know - Model Versoning"
+date: 2025/07/16
+description: This Article will tell about Model Versoning concept and helps to answer Interviews basic questions.
+thumbnail: /images/posts/mlops-workflow-model-versioning/modelversioning.png
+tags: [MLOps]
+author: Diego Fan Ribeiro 
+---
+
+import Image from 'next/image'
+
+# MLOps Workflow Structure: Model Versoning
+
+
+![MLOps Workflow Structure: Model Versoning](/images/posts/mlops-workflow-model-versioning/modelversioning.png)
+
+#### **Concept** :
+
+Tracking iterations of models (code, hyperparameters, performance).
+
+#### **Key Concepts** :
+
+- **Semantic Versioning** : `v1.0.0` (major), `v1.1.0` (minor), `v1.0.1` (patch).
+- **Model Lineage** : Linking a model to its training data and code commit.
+- **Breaking Changes** : Managing API incompatibilities (e.g., input format changes).
+
+#### **Example** :
+
+An NLP team versions a sentiment analysis model. `v1` uses GloVe embeddings, while `v2` uses BERT. They track how `v2`’s higher accuracy impacts inference latency.
+
+#### **Challenges** :
+
+- Reproducing old model versions for audits.
+- Managing dependencies (e.g., a model requires a specific CUDA version).
+
+- **What it is** : Tracking iterations of models (e.g., hyperparameters, code, performance).
+- **Key Tools** :
+    - **MLflow** : Track model versions with experiments.
+    - **DVC** : Version models alongside datasets.
+    - **Custom Solutions** : Use Git tags for model code.
+- **Best Practices** :
+    - Link model versions to **data versions** and **experiments** .
+    - Automate versioning with CI/CD pipelines.
+- **Interview Prep** :
+    - How do you handle breaking changes in model APIs across versions?
+    - Explain model versioning in a production A/B test.
+
+
+Handling **breaking changes in model APIs** across versions requires careful planning to avoid disrupting downstream systems. Below is a structured approach with **real-world examples** and **best practices** :
+
+---
+
+### **1. Semantic Versioning (SemVer)**
+
+- **Principle** : Use version numbers like `v1.0.0`, `v2.0.0` to signal compatibility:
+    
+    - **Major version (v2.0.0)** : Breaking changes (e.g., input/output format changes).
+    - **Minor version (v1.1.0)** : Backward-compatible improvements.
+    - **Patch version (v1.0.1)** : Bug fixes.
+    
+- **Example** :
+    - `v1.0.0`: Expects `{"user_id": 123, "features": [...]}`.
+    - `v2.0.0`: Changes input to `{"user": {"id": 123}, "features": [...]}` (breaking change).
+
+---
+
+### **2. Backward Compatibility Strategies**
+
+#### **A. Graceful Degradation**
+
+- **What** : Support old and new APIs temporarily.
+- **How** :
+    
+    - Deploy multiple API versions (e.g., `/v1/predict`, `/v2/predict`).
+    - Use **API gateways** to route traffic based on headers (e.g., `Accept: application/vnd.myapi.v2+json`).
+    
+- **Example** :
+    - A recommendation model’s `v2` API adds a `confidence_score` field. `v1` clients ignore it, while `v2` clients use it.
+
+#### **B. Adapter Layers**
+
+- **What** : Transform inputs/outputs to match old/new formats.
+- **How** :
+    
+    - Add a middleware layer to convert `v1` requests to `v2` format (and vice versa).
+    
+- **Example** :
+    - A legacy client sends `user_id=123`, but the new model expects `{"user": {"id": 123}}`. The adapter converts the input.
+
+---
+
+### **3. Deprecation Policy**
+
+- **Steps** :
+    
+    1. **Announce** : Notify users of upcoming changes (e.g., email, release notes).
+    2. **Deprecate** : Mark old versions as deprecated but functional.
+    3. **Sunset** : Remove deprecated versions after a grace period (e.g., 90 days).
+    
+- **Example** :
+    - `v1` is deprecated on Jan 1 and removed on April 1. Clients must migrate to `v2` by then.
+
+---
+
+### **4. Input/Output Schema Management**
+
+- **Tools** : Use **JSON Schema** or **OpenAPI** to define expected formats.
+- **Practice** : Validate inputs/outputs against the schema for each version.
+- **Example** :
+    - `v1` schema: `{"type": "object", "properties": {"user_id": {"type": "integer"}}}`.
+    - `v2` schema: `{"type": "object", "properties": {"user": {"type": "object", "properties": {"id": {"type": "integer"}}}}}`.
+
+---
+
+### **5. Model Serving Infrastructure**
+
+- **Versioned Endpoints** : Serve multiple model versions side-by-side.
+    
+    - **Tools** : Kubernetes, MLflow, TensorFlow Serving.
+    
+- **Canary Deployments** : Gradually shift traffic to the new version.
+- **Example** :
+    - Route 10% of traffic to `v2` while monitoring for errors. Roll back if issues arise.
+
+---
+
+### **6. Testing & Validation**
+
+- **Automated Tests** :
+    
+    - Unit tests for each API version.
+    - Integration tests with downstream systems (e.g., mobile apps, dashboards).
+    
+- **Example** :
+    - Test `v1` and `v2` APIs with historical data to ensure consistency.
+
+---
+
+### **7. Documentation & Communication**
+
+- **Release Notes** : Clearly document breaking changes (e.g., "v2 drops support for CSV inputs").
+- **Migration Guides** : Provide examples for upgrading (e.g., "Migrate from v1 to v2 by adding a `user` wrapper").
+- **Example** :
+    - A changelog entry: _"v2.0.0: Renamed `user_id` to `customer_id` in outputs. Update your client code accordingly."_
+
+---
+
+### **Real-World Scenario**
+
+**Problem** : A fraud detection model’s `v2` API changes the output from a `risk_score` (0-100) to a `risk_category` (low/medium/high).  
+**Solution** :
+
+1. Deploy `/v2/predict` alongside `/v1/predict`.
+2. Add an adapter to convert `risk_score` to `risk_category` for `v1` clients.
+3. Announce deprecation of `v1` and sunset it after 3 months.
+
+---
+
+### **Key Takeaways**
+
+- **Plan Ahead** : Use SemVer and communicate changes early.
+- **Avoid Breaking Changes** : Prefer adding optional fields over removing/renaming.
+- **Automate Safeguards** : Use schema validation, versioned endpoints, and monitoring.
+
+---
+
+### **Interview Answer**
+
+_"To handle breaking changes, I’d use semantic versioning to signal incompatibility (e.g., v2.0.0 for a renamed input field). I’d maintain backward compatibility by deploying both v1 and v2 endpoints temporarily, while notifying users of the deprecation timeline. For example, if a model’s input changes from `user_id` to `customer_id`, I’d use an adapter layer to map old requests to the new format during the transition period. Automated tests and clear documentation ensure smooth migration."_
+
+This approach balances innovation with stability, minimizing disruption for users. 🚀
+
+**Model versioning in a production A/B test** allows you to **compare the performance of different model iterations** in real-world scenarios while ensuring **traceability** , **safety** , and **scalability** . Here’s a detailed breakdown:
+
+---
+
+### **Key Concepts**
+
+1. **What is Model Versioning?**  
+    Assigning unique identifiers (e.g., `v1`, `v2`) to models to track:
+    
+    - Code changes (e.g., new algorithms).
+    - Training data versions.
+    - Hyperparameters and performance metrics.
+    
+2. **A/B Testing in Production**  
+    Serving two or more model versions to different user segments to measure:
+    
+    - **Accuracy** (e.g., click-through rate).
+    - **Latency** (e.g., response time).
+    - **Business impact** (e.g., revenue).
+
+---
+
+### **How Model Versioning Enables A/B Testing**
+
+#### **1. Versioned Deployment**
+
+- **Model Registry** : Store all versions (e.g., `v1`, `v2`) with metadata (e.g., training data timestamp, accuracy).
+- **Example** :
+    - Deploy `v1` (baseline) and `v2` (experimental) to separate endpoints.
+    - Use **Kubernetes** or **AWS SageMaker** to manage versioned deployments.
+
+#### **2. Traffic Routing**
+
+- **Weighted Distribution** : Split traffic between versions (e.g., 80% to `v1`, 20% to `v2`).
+- **User Segmentation** : Route specific cohorts (e.g., new users to `v2`, power users to `v1`).
+- **Tools** :
+    - **Istio** (service mesh for traffic splitting).
+    - **MLflow** (model registry with deployment tags).
+
+#### **3. Monitoring & Comparison**
+
+- **Metrics Tracking** : Log performance metrics (e.g., precision, latency) per version.
+- **Example** :
+    
+    - `v1`: 95% accuracy, 150ms latency.
+    - `v2`: 96% accuracy, 200ms latency.
+    
+- **Dashboards** : Use tools like **Prometheus** or **Grafana** to visualize results.
+
+#### **4. Rollback & Promotion**
+
+- **Rollback** : If `v2` underperforms, revert to `v1` instantly using the registry.
+- **Promotion** : If `v2` wins, update the "production" tag in the registry to `v2`.
+
+---
+
+### **Example Workflow**
+
+**Scenario** : Testing a new recommendation model (`v2`) against the current model (`v1`).
+
+1. **Versioning** :
+    
+    - `v1`: Trained on 2023 Q1 data, accuracy=88%.
+    - `v2`: Trained on 2023 Q2 data, accuracy=90% (offline tests).
+    
+2. **Deployment** :
+    
+    - Deploy both versions with endpoints `/model/v1` and `/model/v2`.
+    - Route 50% of traffic to each.
+    
+3. **Monitoring** :
+    
+    - Track metrics like user engagement and latency.
+    
+4. **Decision** :
+    - If `v2` improves engagement by 5% with acceptable latency, promote it to production.
+
+---
+
+### **Challenges & Solutions**
+
+- **Data Consistency** :
+    
+    - **Problem** : `v2` might use newer features absent in `v1`.
+    - **Solution** : Use a **feature store** to ensure both versions access the same data.
+    
+- **Dependency Conflicts** :
+    
+    - **Problem** : `v2` requires a new library version that breaks `v1`.
+    - **Solution** : Containerize models (e.g., Docker) for isolation.
+    
+- **Latency Spikes** :
+    - **Problem** : `v2` is slower due to added complexity.
+    - **Solution** : Optimize the model (e.g., quantization) or adjust traffic weights.
+
+---
+
+### **Best Practices**
+
+1. **Track Everything** : Link model versions to data versions and training experiments.
+2. **Automate Rollbacks** : Set up alerts to auto-rollback if metrics degrade (e.g., latency > 500ms).
+3. **Document Hypotheses** : Record why `v2` was tested (e.g., "Testing embedding size increase").
+
+---
+
+### **Interview Answer**
+
+_"In a production A/B test, model versioning ensures you can safely compare models. For example, I’d deploy `v1` and `v2` behind a router that splits traffic. Each version is stored in a registry with metadata like training data and accuracy. If `v2` causes latency spikes, I’d use the registry to roll back to `v1` instantly. Versioning also lets you audit why a model performed better—for instance, `v2` might use fresher data or a tuned algorithm."_
+
+This approach balances innovation and reliability, ensuring A/B tests are both informative and low-risk. 🚀
+
+### References
+
+- [Data Intensive Book](https://dataintensive.net/)
+- [Hidden Technical Debt in Machine Learning Systems](https://proceedings.neurips.cc/paper_files/paper/2015/file/86df7dcfd896fcaf2674f757a2463eba-Paper.pdf)
+- [Continuous Training of Machine Learning Models](https://blog.stackademic.com/continuous-training-of-ml-models-7d8acaf44dda)
+- [Tfx: A tensorflow-based production-scale machine learning pipeline framework](https://dl.acm.org/doi/10.1145/3097983.3098021)
+- [MLflow Documentation](https://mlflow.org/docs/latest/index.html)
+- [Share Features](https://docs.tecton.ai/docs/share-features#feature-sharing-patterns)
+- [Uber Engineering Blog](https://www.uber.com/en-BR/blog/salvador/engineering/)
+- [Netflix Tech Blog](https://netflixtechblog.com/)
+- [Towards Data Science (Medium)](https://towardsdatascience.com/)
+- [arxiv](https://arxiv.org/)
+- [Machine Learning Operations: A Survey on MLOps Tool Support](https://arxiv.org/abs/2202.10169)
+- [Building Machine Learning Powered Applications](https://www.oreilly.com/library/view/building-machine-learning/9781492045106/)
+- [Feast Documentation](https://docs.feast.dev/)
