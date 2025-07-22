@@ -1,125 +1,208 @@
 ---
-title: 7 Rules for the beginner to Build MCP Agents
-date: 2025/05/25
-description: In this article, we'll explore 7 rules to help beginners from scratch teaching how to implement MCP agents.
+title: 7 Rules for Beginners to Build MCP Agents
+date: 2025/07/22
+description: In this article, we'll explore 7 essential rules to help beginners get started building agents using the Model Context Protocol (MCP).
 thumbnail: /images/posts/mcp-agent/mcpfront.jpg
-tags: [MCP, Agent]
+tags: [MCP, Agent, AI, LLM, Tool Integration]
 author: Diego Fan Ribeiro
 ---
 
 import Image from 'next/image'
 
-# 7 Rules for the beginner to Build MCP Agents 
 
-In the context of distributed systems and multi-agent platforms, an MCP (Multi-Agent Control Protocol) agent is a lightweight component responsible for managing communication, coordination, and control among agents in a networked environment. While specific implementations may vary depending on the platform or framework used, building an MCP agent from scratch provides valuable insight into the core principles of agent-based systems.
+# 7 Rules for Beginners to Build MCP Agents
 
-![MCP Protocol](/images/posts/mcp-agent/mcprotocol.jpg "MCP")
+The future of AI isn’t just smarter models it’s **smarter integration**.
 
-### What is an MCP Agent?
+Enter the **Model Context Protocol (MCP)** an open protocol that standardizes how applications provide context and tools to large language models (LLMs). Think of MCP like a **USB-C port for AI**: just as USB-C lets your laptop connect seamlessly to monitors, drives, and docks, MCP allows LLMs to securely plug into databases, APIs, files, and custom tools.
 
-- Monitoring the status of other agents
-- Routing messages
-- Enforcing policies or protocols
-- Managing authentication and permissions
+If you're building AI agents that go beyond chat agents that can act, retrieve, and automate — then **MCP is your foundation**.
 
-These agents are commonly found in frameworks like FIPA-compliant systems , Janus , or custom-built middleware for robotics, IoT, or enterprise applications.
+In this guide, I’ll walk you through **7 practical rules** every beginner should follow when building their first MCP agent.
 
-### Prerequisites
+![Model Context Protocol](/images/posts/mcp-agent/mcprotocol.jpg "Model Context Protocol – A universal interface between LLMs and tools")
 
-Before starting development, ensure you have:
+## What Is MCP?
 
-- A programming language installed (e.g., Python, Java, C#)
-- Basic knowledge of networking (TCP/UDP, sockets)
-- Familiarity with concurrency models (threads, async I/O)
-- Optional: experience with message-passing frameworks (e.g., ZeroMQ, RabbitMQ)
+According to [modelcontextprotocol.io](https://modelcontextprotocol.io/ ), MCP stands for **Model Context Protocol**, a lightweight, vendor-neutral communication standard that enables secure, structured interaction between LLM applications (**hosts**) and local or remote capabilities (**servers**).
 
+Key components:
+- **MCP Hosts**: Applications like Claude Desktop, IDE assistants, or AI notebooks that use LLMs and want access to tools.
+- **MCP Clients**: Bridge software that connects hosts to one or more servers.
+- **MCP Servers**: Lightweight programs exposing specific functionalities (e.g., reading files, querying databases).
+- **Data Sources**: Local or remote systems (files, APIs, services) accessed via MCP servers.
 
-### Step-by-Step Guide to Building an MCP Agent
+With MCP, your agent doesn’t need hardcoded integrations — it dynamically discovers and uses tools through a standardized interface.
 
+Now, let’s dive into the **7 rules** to build effective MCP agents — even if you’re just starting out.
 
-1. Define the Agent’s Role
-Start by clearly defining what your MCP agent should do. Consider:
+---
 
-- What types of messages will it handle?
-- Which services or agents will it interact with?
-- Will it act proactively or reactively?
-- This step ensures clarity in design and implementation.
+## 🔹 Rule 1: Start with a Clear Purpose
 
-2. Design the Communication Layer
-Communication is central to any agent system. Implement a basic messaging protocol using:
+Before writing code, ask:  
+> “What problem will my MCP agent solve?”
 
-- Sockets (for low-level control)
-- HTTP/WebSockets (for web integration)
-- Message brokers (like MQTT or AMQP)
-Choose based on performance requirements and system architecture.
+Examples:
+- Retrieve internal documentation on demand
+- Query a local database and summarize results
+- Automate file organization in a project folder
 
-Example: Using TCP Sockets in Python
+Avoid building a “do-everything” agent. Instead, focus on **one valuable workflow**. This keeps development manageable and testing meaningful.
+
+💡 Pro Tip: Use user stories:  
+*“As a developer, I want to ask my AI assistant about recent commits, so I don’t have to check Git manually.”*
+
+That’s a perfect scope for your first MCP server.
+
+---
+
+## 🔹 Rule 2: Understand the Client-Server Architecture
+
+MCP follows a **client-server model**, where:
+- The **host** (like Claude Desktop) sends requests
+- The **MCP client** forwards them to the correct **MCP server**
+- The **server** executes logic and returns results
+
+You typically build the **MCP server** — the component that exposes functionality.
+
+Don’t try to rebuild the host or client unless necessary. Leverage existing ones (like those in [Anthropic’s ecosystem](https://docs.anthropic.com/claude/docs/mcp )) and focus on creating value in your server.
+
+---
+
+## 🔹 Rule 3: Expose Capabilities Using Resources, Tools & Prompts
+
+MCP defines three core ways your server shares context with the LLM:
+
+### 📁 Resources
+Static or dynamic content the LLM can read:
+- File contents (`README.md`)
+- API documentation
+- Database schemas
+
+Example: Your server lists all `.log` files in a directory as resources.
+
+### ⚙️ Tools
+Actions the LLM can invoke:
+- `search_logs(query)`
+- `create_ticket(description)`
+- `get_weather(city)`
+
+Each tool has parameters and expected output format.
+
+### 💬 Prompts
+Reusable prompt templates for common workflows:
+- “Summarize the latest error logs”
+- “Generate a weekly report from database entries”
+
+Use these to guide the LLM toward consistent, useful outputs.
+
+Start with **1–2 simple tools** and **a few resources**. Iterate from there.
+
+---
+
+## 🔹 Rule 4: Use Existing SDKs and Templates
+
+You don’t need to implement the MCP transport layer from scratch.
+
+Official SDKs (e.g., Python, typescript.js) handle:
+- JSON-RPC over stdio
+- Handshakes
+- Request/response formatting
+
+👉 Get started with:
+- [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk )
+- [MCP typescript.js SDK](https://github.com/modelcontextprotocol/typescript-sdk)
+
+These give you scaffolding to focus on business logic, not plumbing.
+
+Example: Creating a file reader server in Python becomes straightforward:
 
 ```python
-import socket
+from mcp.server import Server
+from mcp.types import ResourceResult
 
-def start_server():
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('localhost', 9000))
-    server_socket.listen(5)
-    print("MCP Agent listening on port 9000...")
-    
-    while True:
-        client_socket, addr = server_socket.accept()
-        handle_client(client_socket)
+server = Server("file-reader")
 
-def handle_client(client_socket):
-    data = client_socket.recv(1024)
-    print(f"Received: {data.decode()}")
-    client_socket.send(b"ACK")
-    client_socket.close()
+@server.resource("files")
+async def read_file(path: str):
+    with open(path, "r") as f:
+        return ResourceResult(content=f.read())
 
-start_server()
+if __name__ == "__main__":
+    server.run()
 ```
 
-3. Implement Agent Lifecycle Management
-An MCP agent must manage its own lifecycle:
+Boom 💣 — now your LLM can securely read any file you allow.
 
-Initialization (loading configurations, connecting to services)
-Running (processing messages, making decisions)
-Shutdown (cleanly disconnecting resources)
-Use a class-based structure to encapsulate state and behavior.
+## 🔹Rule 5: Prioritize Security and Permissions
+Just because your agent can access files doesn’t mean it should .
 
-4. Add Message Handling Logic
-Define how your agent parses and reacts to incoming messages. Use a simple format like JSON for structured communication.
+Always:
 
-Example: JSON-Based Messaging
+- Run MCP servers with minimal privileges
+- Validate and sanitize all inputs (prevent path traversal!)
+- Support opt-in permissions (e.g., user approves each new directory)
+- Use TLS for remote connections
+- Avoid hardcoding secrets
 
-```json
-{
-  "type": "request",
-  "sender": "sensor_001",
-  "content": {
-    "action": "status_check"
-  }
-}
+Remember: **your server extends the LLM’s reach** . With great power comes great responsibility.🕸️🕷️(e.g in memory of Uncle Ben)👴
 
-```
-Parse and route messages accordingly within your agent logic.
-
-5. Integrate with Other Agents
-Ensure interoperability by adhering to a common protocol or API. If working in a larger system, define discovery mechanisms (e.g., via multicast or a directory service).
-
-6. Add Logging and Monitoring
+## 🔹 Rule 6: Test Early with the MCP Inspector
 Instrument your agent to log activity and expose metrics. This aids debugging and allows integration with monitoring tools like Prometheus or Grafana.
 
-7. Secure the Agent
-Implement basic security features such as:
+Debugging MCP integrations can be tricky without visibility.
 
-- Message validation
-- Authentication (e.g., tokens, TLS)
-- Rate limiting or access control
+Enter: MCP Inspector — a tool that lets you:
 
+- Simulate host-server interactions
+- View request/response payloads
+- Validate schema compliance
+- Test locally before connecting to real hosts. It saves hours.
 
-### Conclusion
+```python
+import logging
+logging.basicConfig(level=logging.INFO)
+```
+*See every handshake, tool call, and error in real time.*
 
-Building an MCP agent from scratch is a rewarding exercise that deepens understanding of agent-based systems. By focusing on clear roles, robust communication, and maintainable design, developers can create scalable and flexible agents suitable for a wide range of applications—from smart grids to autonomous robotics.
+Also, enable logging in your server:
+
+## 🔹 Rule 7: Build, Measure, Iterate
+Your first MCP agent won’t be perfect — and that’s okay.
+
+Launch with a narrow use case. Observe how users interact with it. Then improve.
+
+Ask:
+
+- Are they invoking the right tools?
+- Do prompts need refinement?
+- Are resources too broad or too limited?
+Iterate based on feedback. Great agents evolve.
+
+### Point of View
+
+Building MCP agents isn't about mastering complex AI — it's about connecting intelligence to action .
+
+By following these 7 rules:
+
+- Define a clear purpose
+- Respect the architecture
+- Use resources, tools, and prompts wisely
+- Leverage SDKs
+- Secure by design
+- Debug with tools
+- Iterate relentlessly
+…you’ll go from zero to a working, useful agent faster than you think.
+
+The era of reactive chatbots is ending. The age of proactive, tool-enabled AI agents is beginning — and you now have the keys to build them .
+
+🚀 Ready to start?
+Visit [MCP](https://modelcontextprotocol.io/) to explore examples, tutorials, and official servers.
 
 
 ### References
-- [MCP Documentation](https://modelcontextprotocol.io/)
+- [Model Context Protocol Official Site](https://modelcontextprotocol.io/)
+- [MCP GitHub Repository](https://github.com/modelcontextprotocol)
+- [Claude Desktop MCP Guide](https://docs.anthropic.com/en/docs/mcp)
+- [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk )
